@@ -1,6 +1,7 @@
 # Project Title
 
-Brief description of your project.
+This code is for running Machine Learning codes for Binary Classification, Autoencoder methods and others. 
+The main project is Impedance Classification from Lachner, Tessari, West and Nah.
 
 ## Getting Started
 
