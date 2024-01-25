@@ -2,100 +2,23 @@
 from scipy.io import savemat
 
 import torch
-import numpy as np
 import matplotlib.pyplot as plt
-from torch 			  import nn
 
-class Autoencoder( nn.Module ):
-    def __init__( self ):
-        super( Autoencoder, self ).__init__()
-        
-        # Encoder
-        self.encoder = nn.Sequential(
-            nn.Linear(   8, 256 ),
-            nn.ReLU( True ),
-            nn.Linear( 256,  64 ),
-            nn.ReLU( True ),
-            nn.Linear(  64,  32 ),
-            nn.ReLU( True ),
-            nn.Linear(  32,  3 ) )
-        # Latent space representation        
-        
-        # Decoder
-        self.decoder = nn.Sequential(
-            nn.Linear(   3,  32 ),
-            nn.ReLU( True ),
-            nn.Linear(  32,  64 ),
-            nn.ReLU( True ),
-            nn.Linear(  64, 256 ),
-            nn.ReLU( True ),
-            nn.Linear( 256,   8 ),
-            nn.Sigmoid( )  )
-        # Using sigmoid for the last layer if the input data is normalized between 0 and 1
+from utils    import data_to_dict
+from networks import Autoencoder
 
-    def forward( self, x ):
-        x = self.encoder( x )
-        x = self.decoder( x )
-        return x
-    
-    def encode(self, x):
-        return self.encoder(x)    
-
-def data_to_dict( file_path ):
-    """
-    Reads a text file where: 
-        (1) The first line contains keys and the subsequent lines contain data.
-        (2) The first 8 elements in each line are treated as floats, and the last two are treated as booleans.
-    
-    :param file_path: The path to the text file to be read.
-    :return: A list of dictionaries, each containing the data from one line of the file.
-    """
-    with open( file_path, 'r' ) as file:
-        
-        # Read the first line to get the keys for the dictionaries
-        keys = file.readline( ).strip( ).split( )
-        
-        if len( keys ) != 10:
-            print("Invalid key format. There must be 10 keys.")
-            return [ ]
-
-        # Initialize a dictionary with each key mapping to an empty list
-        data_dict = { key: [] for key in keys }
-        
-        for line_number, line in enumerate( file, start = 2 ):
-            
-            # Split line into parts
-            parts = line.strip().split()  
-            
-            if len(parts) != 10:
-                print( f"Invalid data format on line { line_number }." )
-                continue
-            
-            # Convert the first 8 elements to float and the last two to boolean
-            try:
-                data = [ float( part ) if idx < 8 else ( part.lower( ) == 'true') for idx, part in enumerate( parts ) ]
-                
-            except ValueError as e:
-                print( f"Conversion error on line {line_number}: {e}" )
-                continue
-
-            # Append each value to its corresponding list in the dictionary
-            for key, value in zip( keys, data ):
-                data_dict[ key ].append( value )
-    
-    return data_dict
 
 # Load the entire model
 # Instantiate the model
 model = Autoencoder()
 
-state_dict = torch.load( 'autoencode_square.pth' ) 
+state_dict = torch.load( './models/autoencode_hex.pth' ) 
 
 model.load_state_dict( state_dict )
 model.eval( )
 
 # For the first example, read the square data
-file_dir = "./data/set1/parameters_square.txt"
+file_dir = "./data/set1/parameters_hex.txt"
 
 data = data_to_dict( file_dir )
 

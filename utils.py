@@ -1,3 +1,6 @@
+import numpy as np
+import torch
+from torch.utils.data import Dataset
 
 def data_to_dict( file_path ):
     """
@@ -42,3 +45,19 @@ def data_to_dict( file_path ):
                 data_dict[ key ].append( value )
     
     return data_dict
+
+
+class CustomDataset( Dataset ):
+    def __init__( self, data_dict ):
+        # Assuming all lists in data_dict are of the same length and correspond to the features of the data points
+        # Transpose to get a shape of (num_samples, num_features)
+        self.data = np.array( [ data_dict[ key ] for key in sorted( data_dict.keys( ) ) ] ).T  
+
+    def __len__( self ):
+        return len( self.data )
+
+    def __getitem__( self, idx ):
+        # Assuming that the data is already scaled/normalized appropriately
+        return torch.tensor( self.data[ idx ], dtype = torch.float)
+
+
