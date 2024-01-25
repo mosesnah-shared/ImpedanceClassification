@@ -1,30 +1,36 @@
 import torch
-import torch.nn as nn
+import torch.nn    as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset, random_split
+
+# Sklearn kit
 from sklearn.metrics import accuracy_score
-import numpy as np
+
+# Others
+import numpy             as np
 import matplotlib.pyplot as plt
 
+# Local Libraries
 from utils import data_to_dict
 
 if __name__ == "__main__":
     
     # Types of shapes
-    idx    = 3
+    idx    = 2
     shapes = [ "cylinder", "hex", "square", "triangle" ]
-    b_size = [        64,   64,     512,      64 ]
+    shape  = shapes[ idx ]
+
     # Read the file and parse
     file_dir = "./data/set1/parameters_" + shapes[ idx ] + ".txt"
     data_raw = data_to_dict( file_dir )
 
-    # Desired keys
+    # Parameters for the impedances, stiffness (6) and damping ratio (2)
     desired_keys = ['k_x', 'k_y', 'k_z', 'k_A', 'k_B', 'k_C', 'damp_t', 'damp_r']
 
-    # Extracting only the desired keys and their corresponding values
+    # Extracting out the values for impedances
     imp_vals = { key: data_raw[ key ] for key in desired_keys if key in data_raw }
 
-    # Extracting only success trials
+    # Extracting out the values for the 9th one, which is a boolean array for success trials.
     is_succ = data_raw[ 'success' ]
 
     # Also, normalize the data from 0 to 1
@@ -37,80 +43,94 @@ if __name__ == "__main__":
 
     # Extract the arrays for the 8 keys
     data_arrays = [ imp_vals_norm[ key ] for key in desired_keys ]  
-    stacked_data = np.stack(data_arrays, axis=1)  # Use axis=0 if you need to stack them vertically
-    X_tensor = torch.tensor(stacked_data, dtype=torch.float32)  # Ensure the dtype is correct, float32 is commonly used
 
-    # Stack the arrays to create a 2D array if you have multiple label arrays
-    # If you only have one array of labels, you might skip this step
-    n_array = [1 if x else 0 for x in is_succ ]
+    # Use axis=0 if you need to stack them horizontally
+    # N x 8 array
+    stacked_data = np.stack( data_arrays, axis = 1 )  
 
+    # Ensure the dtype is correct, float32 is commonly used
+    X_tensor = torch.tensor( stacked_data, dtype=torch.float32 )  
+
+    # Save the arrays as integer, 0 (FAIL) or 1 (SUCCESS)
+    n_array = [ 1 if x else 0 for x in is_succ ]
     y_tensor = torch.tensor( n_array, dtype=torch.float32 ).view(-1, 1) 
 
     # Define the size of the splits
-    total_size = len(X_tensor)
-    train_size = int(0.7 * total_size)
-    valid_size = int(0.2 * total_size)
+    # Len get the rows of the array, which is for this case N
+    total_size = len( X_tensor ) 
+    train_size = int( 0.7 * total_size )
+    valid_size = int( 0.2 * total_size )
     test_size = total_size - train_size - valid_size
 
     # Create the dataset and split it
-    dataset = TensorDataset(X_tensor, y_tensor)
-    train_data, temp_data = random_split(dataset, [train_size, valid_size + test_size])
-    valid_data, test_data = random_split(temp_data, [valid_size, test_size])
+    dataset = TensorDataset( X_tensor, y_tensor )
+
+    # Split the data to (1) training, (2) validation and (3) test data
+    train_data, temp_data = random_split(   dataset, [ train_size, valid_size + test_size ] )
+    valid_data, test_data = random_split( temp_data, [ valid_size, test_size ] )
 
     # Create DataLoaders for each set
     batch_size = 64
-    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
-    valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=False)
-    test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
+    train_loader = DataLoader( train_data, batch_size = batch_size, shuffle = True  )
+    valid_loader = DataLoader( valid_data, batch_size = batch_size, shuffle = False )
+    test_loader  = DataLoader(  test_data, batch_size = batch_size, shuffle = False )
 
     # Define the network architecture
-    class BinaryClassifier(nn.Module):
+    class BinaryClassifier( nn.Module ):
         def __init__(self):
-            super(BinaryClassifier, self).__init__()
-            self.layer_1 = nn.Linear( 8, 256)  # Adjust the input dimension
-            self.layer_2 = nn.Linear(256, 32)
-            self.layer_out = nn.Linear(32, 1)
+            super( BinaryClassifier, self ).__init__()
+
+            # Adjust the input dimension
+            self.layer_1   = nn.Linear(   8, 256 )  
+            self.layer_2   = nn.Linear( 256,  32 )
+            self.layer_out = nn.Linear(  32,   1 )
             
             self.relu = nn.ReLU()
             self.sigmoid = nn.Sigmoid()
 
         def forward(self, inputs):
-            x = self.relu(self.layer_1(inputs))
-            x = self.relu(self.layer_2(x))
-            x = self.layer_out(x)
-            x = self.sigmoid(x)
+            x = self.relu( self.layer_1( inputs ) )
+            x = self.relu( self.layer_2( x ) )
+            x = self.layer_out( x ) 
+            x = self.sigmoid( x )
             return x
 
     # Initialize the model, loss function, and optimizer
-    model = BinaryClassifier()
-    criterion = nn.BCELoss()
-    optimizer = optim.Adam(model.parameters(), lr=1e-4)
+    model     = BinaryClassifier( )
+    criterion = nn.BCELoss( )
+    optimizer = optim.Adam( model.parameters( ), lr = 1e-5 )
 
     # Training the model
-    num_epochs = 2400
+    num_epochs = 0 #2**10
     train_losses = []
     valid_losses = []
 
-    for epoch in range(num_epochs):
-        model.train()
+    for epoch in range( num_epochs ):
+
+        # Training mode
+        model.train( )
+
         train_loss = 0
         for X_batch, Y_batch in train_loader:
-            optimizer.zero_grad()
-            Y_pred = model(X_batch)
-            loss = criterion(Y_pred, Y_batch)
-            loss.backward()
-            optimizer.step()
-            train_loss += loss.item()
-        train_losses.append(train_loss / len(train_loader))
+            # Initialize gradient
+            optimizer.zero_grad( )
+            Y_pred = model( X_batch )
+            loss = criterion( Y_pred, Y_batch )
+            loss.backward( )
+            optimizer.step( )
+            train_loss += loss.item( )
+
+        train_losses.append( train_loss / len( train_loader ) )
         
+        # Evaluation mode
         model.eval()
         valid_loss = 0
         with torch.no_grad():
             for X_batch, Y_batch in valid_loader:
-                Y_pred = model(X_batch)
-                loss = criterion(Y_pred, Y_batch)
+                Y_pred = model( X_batch )
+                loss = criterion( Y_pred, Y_batch )
                 valid_loss += loss.item()
-        valid_losses.append(valid_loss / len(valid_loader))
+        valid_losses.append( valid_loss / len(valid_loader ) )
 
         if (epoch+1) % 100 == 0:
             print(f'Epoch [{epoch+1}/{num_epochs}], Training Loss: {train_loss / len(train_loader):.4f}, Validation Loss: {valid_loss / len(valid_loader):.4f}')
@@ -128,19 +148,18 @@ if __name__ == "__main__":
     model.eval()
     y_pred_list = []
     y_true_list = []
-    with torch.no_grad():
+    with torch.no_grad( ):
         for X_batch, Y_batch in test_loader:
-            Y_pred = model(X_batch)
-            y_pred_list.append(Y_pred.numpy())
-            y_true_list.append(Y_batch.numpy())
+            Y_pred = model( X_batch )
+            y_pred_list.append(  Y_pred.numpy( ) )
+            y_true_list.append( Y_batch.numpy( ) )
 
-    y_pred_list = [a.squeeze().tolist() for a in y_pred_list]
-    y_true_list = [a.squeeze().tolist() for a in y_true_list]
+    y_pred_list = np.concatenate( y_pred_list )
+    y_true_list = np.concatenate( y_true_list )
 
     # Calculate accuracy
-    for i in range( len( y_true_list ) ):
-        accuracy = accuracy_score(y_true_list[ i ], np.round(y_pred_list[ i ]))
-        print(f'Accuracy on test set: {accuracy * 100:.2f}%')
+    accuracy = accuracy_score( y_true_list, np.round( y_pred_list ) )
+    print(f'Accuracy on test set: {accuracy * 100:.2f}%')
 
     # Save the model
     model_path = './models/binary_classifier_model.pth'
