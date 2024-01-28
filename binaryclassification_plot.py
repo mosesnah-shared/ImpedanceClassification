@@ -1,12 +1,12 @@
 import torch
 import torch.nn      as nn
 import torch.optim   as optim
-import torch.nn.init as init
 
 from torch.utils.data import DataLoader, TensorDataset, random_split
 
 # Sklearn kit
 from sklearn.metrics import accuracy_score
+from networks import BinaryClassifier
 
 # Others
 import numpy             as np
@@ -15,39 +15,6 @@ import scipy.io
 # Local Libraries
 from utils import data_to_dict
 
-
-
-# Define the network architecture
-class BinaryClassifier( nn.Module ):
-    def __init__(self):
-        super( BinaryClassifier, self ).__init__()
-
-        # Adjust the input dimension
-        self.layer_1   = nn.Linear(   8, 256 )  
-        self.layer_2   = nn.Linear( 256,  32 )
-        self.layer_out = nn.Linear(  32,   1 )
-        
-        self.relu = nn.ReLU()
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, inputs):
-        x = self.relu( self.layer_1( inputs ) )
-        x = self.relu( self.layer_2( x ) )
-        x = self.layer_out( x ) 
-        x = self.sigmoid( x )
-        return x
-    
-    def _initialize_weights(self):
-        # Initialize weights for the linear layers
-        init.xavier_uniform_(self.layer_1.weight)
-        init.xavier_uniform_(self.layer_2.weight)
-        init.xavier_uniform_(self.layer_out.weight)
-        
-        # Initialize biases to zero
-        init.zeros_(self.layer_1.bias)
-        init.zeros_(self.layer_2.bias)    
-        init.zeros_(self.layer_out.bias)    
-    
 if __name__ == "__main__":
     
     # Types of shapes

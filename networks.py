@@ -1,22 +1,36 @@
 
 from torch import nn
-
-class BinaryClassifier(nn.Module):
+import torch.nn.init as init
+# Define the network architecture
+class BinaryClassifier( nn.Module ):
     def __init__(self):
-        super(BinaryClassifier, self).__init__()
-        self.layer_1 = nn.Linear(8, 256) # First hidden layer
-        self.layer_2 = nn.Linear(256, 32) # Second hidden layer
-        self.layer_out = nn.Linear(32, 1) # Output layer
+        super( BinaryClassifier, self ).__init__()
+
+        # Adjust the input dimension
+        self.layer_1   = nn.Linear(   8, 256 )  
+        self.layer_2   = nn.Linear( 256,  32 )
+        self.layer_out = nn.Linear(  32,   1 )
         
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, inputs):
-        x = self.relu(self.layer_1(inputs))
-        x = self.relu(self.layer_2(x))
-        x = self.layer_out(x)
-        x = self.sigmoid(x)  # Sigmoid activation for binary classification
+        x = self.relu( self.layer_1( inputs ) )
+        x = self.relu( self.layer_2( x ) )
+        x = self.layer_out( x ) 
+        x = self.sigmoid( x )
         return x
+    
+    def _initialize_weights(self):
+        # Initialize weights for the linear layers
+        init.xavier_uniform_(self.layer_1.weight)
+        init.xavier_uniform_(self.layer_2.weight)
+        init.xavier_uniform_(self.layer_out.weight)
+        
+        # Initialize biases to zero
+        init.zeros_(self.layer_1.bias)
+        init.zeros_(self.layer_2.bias)    
+        init.zeros_(self.layer_out.bias)    
 
 class Autoencoder( nn.Module ):
     def __init__( self ):

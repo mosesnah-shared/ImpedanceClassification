@@ -1,6 +1,24 @@
 import numpy as np
 import torch
 from torch.utils.data import Dataset
+import random
+import os
+
+# Function to set seeds for reproducibility
+def set_seeds(seed_value=42):
+    random.seed(seed_value)  # Python random module
+    np.random.seed(seed_value)  # Numpy
+    torch.manual_seed(seed_value)  # PyTorch
+    os.environ['PYTHONHASHSEED'] = str(seed_value)  # Python hash seed
+    
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed_value)
+        torch.cuda.manual_seed_all(seed_value)  # if using multi-GPU
+        torch.backends.cudnn.deterministic = True  # CUDNN settings
+        torch.backends.cudnn.benchmark = False
+
+# Set seeds for reproducibility
+set_seeds()
 
 def data_to_dict( file_path ):
     """

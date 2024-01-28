@@ -5,13 +5,14 @@ from torch.utils.data import DataLoader, TensorDataset, random_split
 
 # Sklearn kit
 from sklearn.metrics import accuracy_score
+from networks import BinaryClassifier
 
 # Others
 import numpy             as np
 import matplotlib.pyplot as plt
 
 # Local Libraries
-from utils import data_to_dict
+from utils import data_to_dict, set_seeds
 
 if __name__ == "__main__":
     
@@ -19,6 +20,9 @@ if __name__ == "__main__":
     idx    = 2
     shapes = [ "cylinder", "hex", "square", "triangle" ]
     shape  = shapes[ idx ]
+
+    # We need to set this to re-generate the code
+    set_seeds( )
 
     # Read the file and parse
     file_dir = "./data/set1/parameters_" + shapes[ idx ] + ".txt"
@@ -59,41 +63,19 @@ if __name__ == "__main__":
     # Len get the rows of the array, which is for this case N
     total_size = len( X_tensor ) 
     train_size = int( 0.7 * total_size )
-    valid_size = int( 0.2 * total_size )
-    test_size = total_size - train_size - valid_size
+    test_size = total_size - train_size
 
     # Create the dataset and split it
     dataset = TensorDataset( X_tensor, y_tensor )
 
     # Split the data to (1) training, (2) validation and (3) test data
-    train_data, temp_data = random_split(   dataset, [ train_size, valid_size + test_size ] )
-    valid_data, test_data = random_split( temp_data, [ valid_size, test_size ] )
+    train_data, test_data = random_split(   dataset, [ train_size, test_size ] )
 
     # Create DataLoaders for each set
     batch_size = 64
     train_loader = DataLoader( train_data, batch_size = batch_size, shuffle = True  )
-    valid_loader = DataLoader( valid_data, batch_size = batch_size, shuffle = False )
     test_loader  = DataLoader(  test_data, batch_size = batch_size, shuffle = False )
 
-    # Define the network architecture
-    class BinaryClassifier( nn.Module ):
-        def __init__(self):
-            super( BinaryClassifier, self ).__init__()
-
-            # Adjust the input dimension
-            self.layer_1   = nn.Linear(   8, 256 )  
-            self.layer_2   = nn.Linear( 256,  32 )
-            self.layer_out = nn.Linear(  32,   1 )
-            
-            self.relu = nn.ReLU()
-            self.sigmoid = nn.Sigmoid()
-
-        def forward(self, inputs):
-            x = self.relu( self.layer_1( inputs ) )
-            x = self.relu( self.layer_2( x ) )
-            x = self.layer_out( x ) 
-            x = self.sigmoid( x )
-            return x
 
     # Initialize the model, loss function, and optimizer
     model     = BinaryClassifier( )
@@ -101,9 +83,8 @@ if __name__ == "__main__":
     optimizer = optim.Adam( model.parameters( ), lr = 1e-5 )
 
     # Training the model
-    num_epochs = 0 #2**10
+    num_epochs = 2**11
     train_losses = []
-    valid_losses = []
 
     for epoch in range( num_epochs ):
 
@@ -122,22 +103,11 @@ if __name__ == "__main__":
 
         train_losses.append( train_loss / len( train_loader ) )
         
-        # Evaluation mode
-        model.eval()
-        valid_loss = 0
-        with torch.no_grad():
-            for X_batch, Y_batch in valid_loader:
-                Y_pred = model( X_batch )
-                loss = criterion( Y_pred, Y_batch )
-                valid_loss += loss.item()
-        valid_losses.append( valid_loss / len(valid_loader ) )
-
         if (epoch+1) % 100 == 0:
-            print(f'Epoch [{epoch+1}/{num_epochs}], Training Loss: {train_loss / len(train_loader):.4f}, Validation Loss: {valid_loss / len(valid_loader):.4f}')
+            print(f'Epoch [{epoch+1}/{num_epochs}], Training Loss: {train_loss / len(train_loader):.4f}')
 
     # Plotting the loss values
     plt.plot(train_losses, label='Training Loss')
-    plt.plot(valid_losses, label='Validation Loss')
     plt.title('Loss Value vs. Epochs')
     plt.xlabel('Epochs')
     plt.ylabel('Loss Value')
