@@ -18,7 +18,7 @@ from utils import data_to_dict
 if __name__ == "__main__":
     
     # Types of shapes
-    idx    = 2
+    idx    = 3
     shapes = [ "cylinder", "hex", "square", "triangle" ]
     shape  = shapes[ idx ]
 

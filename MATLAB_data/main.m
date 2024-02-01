@@ -3,7 +3,7 @@ clear; close; clc;
 
 %% (1A) Plot epoch vs. data
 
-data = load( 'data_square.mat' );
+data = load( 'data_cylinder.mat' );
 
 x = data.epochs;
 y = 100 * data.acc_arr;
@@ -13,7 +13,7 @@ y_std  = std( y' );
 
 f = figure( ); a = axes( 'parent', f );
 hold on
-scatter( x, y, 200, 'o', 'filled', 'markeredgecolor', 'k', 'markerfacecolor', 'w' , 'linewidth', 5)
+scatter( double( x ), y, 200, 'o', 'filled', 'markeredgecolor', 'k', 'markerfacecolor', 'w' , 'linewidth', 5)
 a.XScale = 'log';
 
 % errorbar( x, y_mean, y_std, 'linewidth',5 )
@@ -22,6 +22,8 @@ a.XScale = 'log';
 xlabel( 'Epochs (-)', 'fontsize', 40 );
 ylabel( 'Accuracy (\%)', 'fontsize', 40 );
 set( a, 'fontsize', 40, 'xlim', [ 0.1, max( x )] )
+
+max( max( y_mean ) )
 
 %% (1B) Dataset to sample
 

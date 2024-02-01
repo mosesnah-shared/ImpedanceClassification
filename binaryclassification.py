@@ -17,7 +17,7 @@ from utils import data_to_dict, set_seeds
 if __name__ == "__main__":
     
     # Types of shapes
-    idx    = 2
+    idx    = 3
     shapes = [ "cylinder", "hex", "square", "triangle" ]
     shape  = shapes[ idx ]
 
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     optimizer = optim.Adam( model.parameters( ), lr = 1e-5 )
 
     # Training the model
-    num_epochs = 2**11
+    num_epochs = 2**12
     train_losses = []
 
     for epoch in range( num_epochs ):
@@ -132,6 +132,6 @@ if __name__ == "__main__":
     print(f'Accuracy on test set: {accuracy * 100:.2f}%')
 
     # Save the model
-    model_path = './models/binary_classifier_model.pth'
+    model_path = './models/' + shape + '.pth'
     torch.save(model.state_dict(), model_path)
     print(f'Model saved to {model_path}')
