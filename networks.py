@@ -1,7 +1,7 @@
 import torch.nn as nn
 
-# Define the neural network model
-# One can change the architecture of the Neural Network
+# The Neural Network Model for Binary Classification
+# The sizes of the hidden layer are chosen arbitrarily.
 class BinaryClassificationNN( nn.Module ):
     def __init__( self, input_size ):
         super( BinaryClassificationNN, self ).__init__( )
