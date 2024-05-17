@@ -99,12 +99,12 @@ if __name__ == "__main__":
             #   N random datasets including both success AND failure.
             #   Currently, we are only interested in having success data, hence just use 1 as argument
 
-            data = generate_data( 1 )
+            data = generate_data( 1 )[0]
             predictions = predict( model, data )
 
             # If over 0.5, predict success!
-            if predictions[ 0 ] >= 0.5:
-                success_data.append( data[ 0 ] + [ "success" ] )
+            if predictions >= 0.5:
+                success_data.append( data + [ "success" ] )
 
         # Save results to file
         save_results(success_data, "./created_data/predicted_success_data.txt" )
