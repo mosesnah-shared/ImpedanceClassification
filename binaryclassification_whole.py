@@ -4,6 +4,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.utils.tensorboard import SummaryWriter
+
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.preprocessing   import MinMaxScaler
 
@@ -36,6 +38,9 @@ def read_file_to_dict( file_path, data_dict ):
 
 if __name__ == "__main__":
 
+    # Turn on cross validation or not
+    turn_on_cross_valid = False
+
     # Read the dataset from the folder
     folder = "data/set1"
     files  = [ "parameters_cylinder.txt", "parameters_hex.txt", "parameters_square.txt", "parameters_triangle.txt" ]
@@ -51,7 +56,7 @@ if __name__ == "__main__":
     X = np.array( [ all_data[ key ] for key in list( all_data.keys( ) )[ :8 ] ] ).T
     y = np.array(   all_data[ 'success'], dtype=np.float32)
 
-    # Standardize the features
+    # Normalize the features from 0 to 1
     # The min/max values of   k_x	  k_y,	  k_z,	 k_A,   k_B,   k_C, damp_t,	 damp_r
     min_vals = np.array( [   50.0,   50.0,   50.0,   5.0,   5.0,   5.0,    0.1,    0.1 ] )
     max_vals = np.array( [ 1000.0, 1000.0, 1000.0, 200.0, 200.0, 200.0,    1.0,    1.0 ] )
@@ -81,32 +86,79 @@ if __name__ == "__main__":
     criterion = nn.BCELoss( )
     optimizer = optim.Adam( model.parameters(), lr=1e-4 )
 
+    # Initialize TensorBoard writer
+    layout = {
+        "Loss": {
+            "Loss": ["Multiline", ["loss/train", "loss/validation" ] ],
+        },
+    }
+
+    writer = SummaryWriter( 'runs/experiment_1' )
+    writer.add_custom_scalars( layout )
+
     # Train the model with cross-validation
     # Divide the training dataset to 3 segments, run training
     kfold = KFold( n_splits=3, shuffle=True, random_state=42 )
+    # Set the number of epochs
+    Nepoch = 2**13
 
-    # Iterate over the fold, which is again divided into training and validation set. 
-    for fold, ( train_idx, val_idx ) in enumerate( kfold.split( X_train ) ):
-        print( f'Fold { fold + 1 }' )
-        X_train_fold, X_val_fold = X_train[ train_idx ], X_train[ val_idx ]
-        y_train_fold, y_val_fold = y_train[ train_idx ], y_train[ val_idx ]
+    if turn_on_cross_valid:
+        # Train the model with cross-validation
+        # Divide the training dataset into 3 segments, run training
+        kfold = KFold(n_splits=3, shuffle=True, random_state=42)
 
-        # Train the model
-        for epoch in range( 2**12 ): 
+        # Iterate over the fold, which is again divided into training and validation set.
+        for fold, (train_idx, val_idx) in enumerate(kfold.split(X_train)):
+            print(f'Fold {fold + 1}')
+            X_train_fold, X_val_fold = X_train[train_idx], X_train[val_idx]
+            y_train_fold, y_val_fold = y_train[train_idx], y_train[val_idx]
+
+            # Train the model
+            for epoch in range(Nepoch):
+                model.train()
+                optimizer.zero_grad()
+                outputs = model(X_train_fold)
+                loss = criterion(outputs, y_train_fold)
+                loss.backward()
+                optimizer.step()
+
+                model.eval()
+                with torch.no_grad():
+                    val_outputs = model(X_val_fold)
+                    val_loss = criterion(val_outputs, y_val_fold)
+
+                if epoch % 10 == 0:
+                    print(f'Epoch {epoch + 1}, Loss: {loss.item():.6f}, Validation Loss: {val_loss.item():.6f}')
+
+                # Log the loss
+                writer.add_scalars('runs_split', {f'Loss/train_fold{fold}': loss.item(), f'Loss/validation_fold{fold}': val_loss.item()}, epoch + 1)
+        print("Training completed with cross-validation.")
+        model_save_path = "models/binary_classification_nn_cv.pth"
+
+    else:
+        # Train the model without cross-validation
+        for epoch in range( Nepoch ):
             model.train()
             optimizer.zero_grad()
-            outputs = model( X_train_fold )
-            loss    = criterion( outputs, y_train_fold )
+            outputs = model(X_train)
+            loss = criterion(outputs, y_train)
             loss.backward()
             optimizer.step()
 
             model.eval()
             with torch.no_grad():
-                val_outputs = model( X_val_fold )
-                val_loss    = criterion( val_outputs, y_val_fold )
+                val_outputs = model(X_test)
+                val_loss = criterion(val_outputs, y_test)
 
             if epoch % 10 == 0:
                 print(f'Epoch {epoch + 1}, Loss: {loss.item():.6f}, Validation Loss: {val_loss.item():.6f}')
+
+            # Log the loss
+            writer.add_scalars('runs', {'Loss/train': loss.item(), 'Loss/validation': val_loss.item()}, epoch + 1)
+
+        print("Training completed without cross-validation.")
+        model_save_path = "models/binary_classification_nn_no_cv.pth"
+
 
     # Training complete!
     # Evaluate the model on the test set
@@ -120,6 +172,5 @@ if __name__ == "__main__":
     print( f'Test Loss: {test_loss.item():.4f}, Test Accuracy: {accuracy * 100:.2f}%')
 
     # Save the model
-    model_save_path = "models/binary_classification_nn.pth"
     torch.save( model.state_dict(), model_save_path )
     print(f"Model saved to {model_save_path}")
