@@ -1,9 +1,20 @@
 # Project Title
 
-This code is for running Machine Learning codes for Binary Classification, Autoencoder methods and others. 
-The main project is Impedance Classification from Lachner, Tessari, West and Nah.
+This code is for running Binary Classification for peg-in-hole assembly with the KUKA LBR iiwa. 
 
-## Getting Started
+# Sunrise Code
+
+## Getting started
+
+The Sunrise code can be copied into your Sunrise Workspace. 
+
+### Prerequisites
+
+We used a LBR iiwa 14kg robot with Media Flange Touch electric. If you have another iiwa version or flange, please update the StationSetup.cat file. 
+
+# Python Impedance Classifier
+
+## Getting started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. 
 
