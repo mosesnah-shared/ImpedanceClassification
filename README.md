@@ -1,4 +1,4 @@
-# Project Title
+# Divide et impera: Learning impedance families for peg-in-hole assembly
 
 This code is for running Binary Classification for peg-in-hole assembly with the KUKA LBR iiwa. 
 
