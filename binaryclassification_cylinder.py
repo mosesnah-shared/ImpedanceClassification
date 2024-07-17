@@ -102,7 +102,7 @@ if __name__ == "__main__":
             "Loss": ["Multiline", ["loss/train", "loss/validation" ] ],
         },
     }
-    writer = SummaryWriter( 'runs/experiment_1' )
+    writer = SummaryWriter( 'runs/experiment2' )
     writer.add_custom_scalars( layout )
 
     # Set the number of epochs
