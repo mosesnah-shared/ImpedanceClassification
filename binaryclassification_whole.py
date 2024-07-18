@@ -103,7 +103,7 @@ if __name__ == "__main__":
             "Loss": ["Multiline", ["loss/train", "loss/validation" ] ],
         },
     }
-    writer = SummaryWriter( 'runs/experiment_1' )
+    writer = SummaryWriter( 'runs/experiment6' )
     writer.add_custom_scalars( layout )
 
     # Set the number of epochs
@@ -155,7 +155,7 @@ if __name__ == "__main__":
         print( "Training completed with cross-validation." )
 
         # Save the trained Neural Network model
-        model_save_path = "models/binary_classification_nn_cv.pth"
+        model_save_path = "models/binary_classification_all_nn_cv.pth"
 
     else:
         # Train the model without cross-validation
@@ -184,7 +184,7 @@ if __name__ == "__main__":
             writer.add_scalars('runs', {'Loss/train': loss.item(), 'Loss/validation': val_loss.item()}, epoch + 1)
 
         print( "Training completed without cross-validation." )
-        model_save_path = "models/binary_classification_nn_no_cv.pth"
+        model_save_path = "models/binary_classification_all_nn_no_cv.pth"
 
 
     # Training complete!

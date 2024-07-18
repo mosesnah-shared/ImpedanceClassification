@@ -81,7 +81,7 @@ if __name__ == "__main__":
     else:
         # [Note] [Moses C. Nah] [2024.05.17]
         #   We use the Neural Network that is trained without cross validation
-        model_path = "models/binary_classification_cylinder_nn_no_cv.pth"  
+        model_path = "models/set2/binary_classification_cylinder_nn_no_cv.pth"  
         model = load_model(model_path, input_size=8)
 
         # Generate data and predict outputs until N 'success' outputs are obtained
@@ -109,4 +109,4 @@ if __name__ == "__main__":
 
 
         # Save results to file
-        save_results(whole_data, "./created_data/predicted_data_cylinder.txt" )
+        save_results(whole_data, "./created_data/set2/predicted_data_cylinder.txt" )
