@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     # The dataset txt files
     folder = "data/set1"
-    files  = [ "parameters_cylinder.txt", "parameters_hex.txt", "parameters_square.txt", "parameters_triangle.txt" ]
+    files  = [ "parameters_cylinder.txt", "parameters_hex.txt", "parameters_square_new.txt", "parameters_triangle.txt" ]
 
     # Initialize dictionary and read the keys and corresponding values. 
     all_data = { }
@@ -103,7 +103,7 @@ if __name__ == "__main__":
             "Loss": ["Multiline", ["loss/train", "loss/validation" ] ],
         },
     }
-    writer = SummaryWriter( 'runs/experiment6' )
+    writer = SummaryWriter( 'runs/experiment8_all_new' )
     writer.add_custom_scalars( layout )
 
     # Set the number of epochs

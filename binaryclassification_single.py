@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     # The dataset txt file, reading cylinder only
     folder = "data/set1"
-    file  = "parameters_triangle.txt"
+    file  = "parameters_hex.txt"
 
     # Initialize dictionary and read the keys and corresponding values. 
     all_data = { }
@@ -102,7 +102,7 @@ if __name__ == "__main__":
             "Loss": ["Multiline", ["loss/train", "loss/validation" ] ],
         },
     }
-    writer = SummaryWriter( 'runs/experiment5' )
+    writer = SummaryWriter( 'runs/experiment9_hex_2_14' )
     writer.add_custom_scalars( layout )
 
     # Set the number of epochs
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     #    Empirically, I found out that after 2**13 iterations with learning rate 1e-4 (refer to ADAM above)
     #    The validation loss increases whereas the training loss decreases.
     #    This is prominently known as an indication of overfitting. Hence, set the epoch as 2**13.
-    Nepoch = 2**13
+    Nepoch = 2**14
 
     if turn_on_cross_valid:
         # Train the model with cross-validation
@@ -154,7 +154,7 @@ if __name__ == "__main__":
         print( "Training completed with cross-validation." )
 
         # Save the trained Neural Network model
-        model_save_path = "models/binary_classification_triangle_nn_cv.pth"
+        model_save_path = "models/binary_classification_hex_2_14.pth"
 
     else:
         # Train the model without cross-validation
@@ -183,7 +183,7 @@ if __name__ == "__main__":
             writer.add_scalars('runs', {'Loss/train': loss.item(), 'Loss/validation': val_loss.item()}, epoch + 1)
 
         print( "Training completed without cross-validation." )
-        model_save_path = "models/binary_classification_triangle_nn_no_cv.pth"
+        model_save_path = "models/binary_classification_hex_2_14.pth"
 
 
     # Training complete!
